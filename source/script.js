@@ -39,6 +39,19 @@ class Robot {
     s.y /= this.points.length;
     return s;
   }
+  
+  reverse(){
+    let center = this.get_center()
+    let i;
+    let vertices = [];
+    for (i = 0; i < this.points.length; i++){
+      let w = new Point(0,0);
+      w.x  += 2*center.x - this.points[i].x;
+      w.y  += 2*center.y - this.points[i].y;
+      vertices.push(w);
+    }
+    return vertices
+  }
 
   update(mX,mY){
     return;
@@ -250,7 +263,11 @@ let robot_mode = 1;
 let obstacle_mode = 2;
 let edit_mode = 3;
 let finish_line_mode = 12;
+let minkowski_mode = 13;
+let moving_robot_mode = 14;
+
 let finishline = null
+let cntrl_var = 0;
 
 let draw_mode = obstacle_mode;
 
@@ -259,6 +276,8 @@ let drawing_robot = false;
 
 let obstacles = [];
 let robots = [];
+let anti_robot = [];
+let minkowski_sum = null;
 
 // Editing
 let grabbable_points = [];
@@ -267,12 +286,9 @@ let grabbed = null;
 
 // Window
 let h = 720, w = 1080;
-let canvas_diagonal = Math.sqrt(h**2 + w**2);;
+let canvas_diagonal = Math.sqrt(h**2 + w**2);
 
 // Color Management
-
-
-
 function randint(a, b) {
   // random integer in [a, b]
   if (typeof b == 'undefined'){
@@ -282,14 +298,14 @@ function randint(a, b) {
   return a + Math.floor((b-a)*Math.random());
 }
 
-function random_color(_alpha_=255) {
+function random_color(_alpha_=133) {
   let r = randint(0,255);
   let g = randint(0,255);
   let b = randint(0,255);
   return color(r, g, b, _alpha_);
 }
 
-function intense_color(_alpha_=255) {
+function intense_color(_alpha_=133) {
   let r = randint(0,255);
   let g = randint(0,255);
   let b = 255 - ((r+g)/2);
@@ -303,6 +319,7 @@ function last(x){
 function last_obstacle(obstacles){
   return last(obstacles);
 }
+
 function last_robot(robots){
   return last(robots)
 }
@@ -314,13 +331,98 @@ function draw_obstacles(obstacles){
   }
 }
 
-function set_mode(_mode_) {
+function set_mode(_mode_) { 
   if (_mode_ != draw_mode) {
+    if (draw_mode == minkowski_mode){
+      cntrl_var += 1;
+    }
     cancel_draw(draw_mode);
     draw_mode = _mode_;
+    if (draw_mode == moving_robot_mode){ // A BIG TODO HERE
+      
+    }
   }
+  else if (_mode_ == minkowski_mode){
+    if (cntrl_var == 0){
+      draw_minkowski_sum(anti_robot,obstacles);
+      draw_mode = _mode_;
+      cntrl_var += 1;
+    }
+  }
+} //TODO
+
+function calculate_minkowski_sum(robots,obstacles){ 
+  let minkowski_sum = [];
+  let center_robot = robots[0].get_center();
+  let anti_robot = robots[0].reverse();
+  let i;
+  let j;
+  let k;
+  for (i = 0; i < obstacles.length; i++){
+    let center_obs = obstacles[i].get_center();
+    let obst = obstacles[i].points;
+    let parts = [];
+    for (k = 0; k < anti_robot.length; k++){
+      for ( j = 0; j < obst.length; j++){
+        let n_p = new Point(obst[j].x + anti_robot[k].x  - center_robot.x, obst[j].y + anti_robot[k].y  - center_robot.y);
+        parts.push(n_p);
+      } 
+    }
+  minkowski_sum.push([convexHull(parts)]);
+  }
+  return minkowski_sum
+} 
+
+function convexHull(points) {
+    points.sort(comparison);
+    var L = [];
+    for (var i = 0; i < points.length; i++) {
+        while (L.length >= 2 && cross(L[L.length - 2], L[L.length - 1], points[i]) <= 0) {
+            L.pop();
+        }
+        L.push(points[i]);
+    }
+    var U = [];
+    for (var i2 = points.length - 1; i2 >= 0; i2--) {
+        while (U.length >= 2 && cross(U[U.length - 2], U[U.length - 1], points[i2]) <= 0) {
+            U.pop();
+        }
+        U.push(points[i2]);
+    }
+    L.pop();
+    U.pop();
+    return L.concat(U);
+}
+ 
+function comparison(a, b) {
+    return a.x == b.x ? a.y - b.y : a.x - b.x;
+}
+ 
+function cross(a, b, o) {
+    return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
 }
 
+function draw_minkowski_sum(minkowski_sum){ //TODO
+  let i;
+  let j;
+  let c = color(55,0,0)
+  c.setAlpha(100)
+  
+  let m;
+  for (m = 0; m < minkowski_sum.length; m++){
+    beginShape();
+    fill(c);
+    let minkowski_sum_m = calculate_minkowski_sum(robots,obstacles)[m]
+    for (i = 0; i < minkowski_sum_m.length; i++){
+    
+      for ( j = 0; j < minkowski_sum_m[i].length; j++){
+      
+        vertex(minkowski_sum_m[i][j].x, minkowski_sum_m[i][j].y);
+      }
+    }
+  endShape(CLOSE);
+  }
+}
 function draw_robots(robots){
   if (robots[0] != null){
     robots[0].draw();
@@ -348,6 +450,9 @@ function draw_cursor(draw_mode){
     case robot_mode:
       cursor(WAIT);
       break;
+      case minkowski_mode:
+      cursor('cell');
+      break;
     case edit_mode:
       if (mouseIsPressed){
         cursor('grabbing');
@@ -356,7 +461,7 @@ function draw_cursor(draw_mode){
       }
       break;
   }
-}
+} // TODO
 
 function debugable_point(x,y) {
   if(debug_mode){
@@ -373,7 +478,7 @@ function setup(){
     createCanvas(w,h);
 }
 
-function draw() {
+function draw() {  
   // Clear screen
   background(255);
 
@@ -384,17 +489,27 @@ function draw() {
   grabbable_points = [];
 
   // Draw objects
+  
   draw_obstacles(obstacles);
   draw_robots(robots);
+  
+  if (draw_mode == minkowski_mode){
+    if (robots[0] != null){
+      minkowski_sum = calculate_minkowski_sum(robots,obstacles);
+      draw_minkowski_sum(minkowski_sum);
+    }
+  }  
+  
+  
   if (finishline != null){
     let d = color(0,255,0);
     fill(d);
     ellipse(finishline[0],finishline[1],5,5);
 
-  }
-  // move grabbed objects
-  move_grab();
 }
+    // move grabbed objects
+  move_grab();
+} // TODO  ( GENETIC ALGOR MODE )
 
 // button actions
 
@@ -437,6 +552,7 @@ function cancel_draw(target){
       case robot_mode:
         drawing_robot = false;
         figures = robots;
+        anti_robots = robots[0]
         break;
       case obstacle_mode:
         drawing_obstacle = false;
@@ -445,7 +561,6 @@ function cancel_draw(target){
       }
     let _figure_ = figures.pop();
     _figure_ = undefined;
-    delete _figure_;
   }
 }
 
@@ -562,6 +677,8 @@ function keyPressed() {
     case ENTER:
       // force finishing the shape drawing
       force_finish(draw_mode);
+      break;
+    case ALT:
       break;
   }
 }   //TODO

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Algum meme engraçado</title>
+    <style>
+    /* Tooltip container */
+    .tooltip {
+      position: relative;
+      display: inline-block;
+      cursor: pointer;
+    }
+
+    /* Tooltip text */
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 100px;
+      background-color: black;
+      color: #fff;
+      text-align: center;
+      padding: 5px 0;
+      border-radius: 6px;
+      position: absolute;
+      z-index: 1;
+    }
+
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+    }
+    </style>
+
+    <meta charset="utf-8"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/addons/p5.dom.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.8.0/addons/p5.sound.min.js"></script>
+    <!--script src="source/p5.js"></script-->
+    <script src="source/script.js"></script>
+  </head>
+
+  <body>
+    <h1>Computational Geometry</h1>
+    <h2>Bruno R. L. Netto - Ricardo T. Figueiredo</h2>
+    <h3>Final Project - Motion Planning</h3>
+
+    <form action="">
+      <div style="margin:0;padding:0">
+        <div>
+
+        <!-- Robot drawing Mode-->
+        <div class="tooltip">
+          <span class="tooltiptext">Create Robot</span>
+          <img src="images/robot.jpg" alt="Create Robots" width="200" height="200" onclick="set_mode(robot_mode)">
+          <!--<input type="image" src="images/robot.png" alt="Create Robots" width="100" height="100" onclick="set_mode(robot_mode)">-->
+        </div>
+
+        <!-- Obstacle drawing Mode -->
+        <div class="tooltip">
+          <span class="tooltiptext">Create Obstacles</span>
+          <img src="images/obstacle.jpg" alt="Create Obstacles" width="200" height="200" onclick="set_mode(obstacle_mode)">
+          <!--<input type="image" src="images/obstacle.png" alt="Create Obstacles" width="100" height="100" onclick="set_mode(obstacle_mode)">-->
+        </div>
+
+        <!-- Finish Line Mode -->
+        <div class="tooltip">
+          <span class="tooltiptext">Create Finish Line</span>
+          <img src="images/flag.jpg" alt="Create Finish Line" width="200" height="200" onclick="set_mode(finish_line_mode)">
+          <!--<input type="image" src="images/flag.png" alt="Create Finish Line" width="100" height="100" onclick="set_mode(finish_line_mode)">-->
+        </div>
+
+         <!-- Minkowski Mode -->
+        <div class="tooltip">
+          <span class="tooltiptext">Draws the Minkowski Sum</span>
+          <img src="images/hamids.jpg" alt="Draws the Minkowski Sum" width="200" height="200" onclick="set_mode(minkowski_mode)">
+          <!--<input type="image" src="images/hamids.jpg" alt="Create Finish Line" width="100" height="100" onclick="set_mode(minkowski_mode)">-->
+        </div>
+
+        <!-- Moving Robot Mode -->
+        <div class="tooltip">
+          <span class="tooltiptext">Moving Robot</span>
+          <img src="images/move.jpg" alt="Moving Robot" width="200" height="200" onclick="set_mode(moving_robot_mode)">
+          <!--<input type="image" src="images/move.png" alt="Moving Robot" width="100" height="100" onclick="set_mode(moving_robot_mode)">-->
+        </div>
+
+        <!-- Editing Mode-->
+        <div class="tooltip">
+          <span class="tooltiptext">Modo Editor</span>
+          <img src="images/edit.png" alt="Edit Mode" width="200" height="200" onclick="set_mode(edit_mode)">
+          <!--<input type="image" src="images/edit.png" alt="Edit Mode" width="100" height="100" onclick="set_mode(edit_mode)">-->
+        </div>
+
+        <!-- Toggle Debug Mode-->
+        <div class="tooltip">
+          <span class="tooltiptext">Modo <i>Debug</i></span>
+          <img id="debug_img" src="images/debug2.png" alt="Debug Mode" width="200" height="200" onclick="toggle_debug_mode(this)">
+          <!--<input type="image" src="images/debug2.png" alt="Debug Mode" width="100" height="100" onclick="toggle_debug_mode(this)">-->
+        </div>
+
+        <!-- Save Picture-->
+        <div class="tooltip">
+          <span class="tooltiptext">Salvar sua Arte</span>
+          <img src="images/save.png" alt="Save Picture" width="200" height="200" onclick="_save_('art')">
+          <!--<input type="image" src="images/save.png" alt="Save Picture" width="100" height="100" onclick="_save_('art')">-->
+        </div>
+      </div>
+      </div>
+    </form>
+  </body>
+</html>

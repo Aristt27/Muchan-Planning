@@ -147,6 +147,7 @@ class Robot {
   }
 }
 
+
 class Obstacle {
   constructor(obstacles, root_point, color=random_color()) {
     this.color = color;
@@ -375,7 +376,7 @@ let moving_robot_mode = 14;
 let winner_robot_mode = 15;
 
 let finishline = null
-let cntrl_var = 0;
+let cntrl_var = 1;
 let cntrl_var2 = 0;
 let control_var3 = 0;
 let draw_mode = obstacle_mode;
@@ -459,33 +460,55 @@ function winner_robot(finishline,robots){
   }
 }
 
+let max_step = 0;
+
+function next_step(steps){
+  if (steps.length == 1){
+    //.log('entrou no primeiro if aqui')
+    let p2     = last(steps);
+    let q = new Point(p2.x + randint(-25,26),p2.y + randint(-25,26));
+    return q;
+  }
+  if (steps.length > 1) {
+    //console.log('entrou o segundo if aqui caralho')
+    let u = steps[steps.length - 2];
+    let v = last(steps);
+    let di = new Point(v.x - u.x, v.y - u.y);
+    let Theta = random(-3*Math.PI/3,3*Math.PI/3);
+    let modulo = randint(1,36)
+    let normdi = hypot(di.x,di.y)
+    let dir = new Point(di.x/normdi,di.y/normdi)
+    let q   = new Point(modulo*(Math.cos(Theta)*dir.x - Math.sin(Theta)*dir.y) + v.x, modulo*(Math.sin(Theta)*dir.x + Math.cos(Theta)*dir.y) + v.y);
+    //console.log(u,v,di,Theta,modulo,dir,q);
+    return q;
+  }
+}
 function draw_random_movement(robots,finishline,minkowski_sum,steps){ // BIG TODO HERE
   let center  = robots[0].get_center();
-  var max_step = 0;
+
   steps.push(center);
   while (hypot(last(steps).x - finishline.x,last(steps).y - finishline.y) > 25){
     let p     = last(steps);
-    let q     = new Point(p.x + randint(-25,26),p.y + randint(-25,26));
+    let q2     = next_step(steps);
+    console.log(q2,steps);
     let k;
     let j;
     let a_verdade = 0;
       for (k = 0; k <minkowsvao.length; k++){
-         if(minkowsvao[k].is_inside(q)){
+         if(minkowsvao[k].is_inside(q2)){
            a_verdade ++;
          }
       }
-      if ( a_verdade == 0 && abs(q.x) < w*0.9 && abs(q.y) < h*0.9 && abs(q.x) > w - w*0.9 && abs(q.y) > h - h*0.9){
-          steps.push(q);
+      if ( a_verdade == 0 && abs(q2.x) < w*0.9 && abs(q2.y) < h*0.9 && abs(q2.x) > w - w*0.9 && abs(q2.y) > h - h*0.9){
+          steps.push(q2);
         max_step ++;
       }
 
       else if (a_verdade > 0){
-        console.log('teu idiota vc matou a velinha',q);
       }
   if (hypot(last(steps).x - finishline.x,last(steps).y - finishline.y) < 25){
 
     console.log('voce chegou ao seu destino.googlemaps')
-    //the_way()
     control_var3 ++;
     break;
   }
@@ -658,18 +681,35 @@ function draw() {
   grabbable_points = [];
 
   // Draw objects
+  if (control_var3 > 0){
+    console.log('mano kd meu robot?', robots[0].points[0])
+    let k;
+    let j;
+    let wr = [];
 
-  draw_obstacles(obstacles);
-  draw_robots(robots);
-  if (draw_mode == winner_robot_mode){ //TODO
-    if (control_var3 > 0){
-      deseha alguns centros
-      desenha o robot no final e no começo se der
-      desenha os obstaculos sem o minkowski eu acho
-
+    for(k=0; k < robots[0].points.length; k++){
+      console.log('oi')
+      let aaa = new Point(robots[0].points[k].x + last(steps).x - robots[0].get_center().x, robots[0].points[k].y + last(steps).y - robots[0].get_center().y);
+      wr.push(aaa);
+    }
+    wr.push(wr[0]);
+    for(j=0; j < wr.length-1; j++){
+      console.log('seu robot mermão',j)
+      line(wr[j].x,wr[j].y,wr[j+1].x,wr[j+1].y);
 
     }
   }
+  draw_obstacles(obstacles);
+  draw_robots(robots);
+ // if (draw_mode == winner_robot_mode){ //TODO
+ //   if (control_var3 > 0){
+ //     deseha alguns centros
+//      desenha o robot no final e no começo se der
+ //     desenha os obstaculos sem o minkowski eu acho
+
+
+    //}
+ // }
   if (draw_mode == moving_robot_mode){
     draw_minkowskis(minkowsvao);
   }
@@ -678,40 +718,58 @@ function draw() {
     if (robots[0] != null){
       minkowski_sum = calculate_minkowski_sum(robots,obstacles);
       let k;
+
       if (cntrl_var2 == 0){
         for (k=0; k<minkowski_sum.length; k++){
           minkowsvao.push( new Minkowskis(minkowski_sum[k]));
           cntrl_var2 ++;
         }
       }
-      if( cntrl_var == 0){
-        cntrl_var ++;
+      else if (cntrl_var2 > 0){
+        let j;
+        let minkowsvao = []
+        for (j=0; j<minkowski_sum.length; j++){
+          minkowsvao.push( new Minkowskis(minkowski_sum[j]));
+          cntrl_var2 ++;
+        }
       }
-      draw_minkowski_sum(minkowski_sum);
     }
-  }
+      draw_minkowski_sum(minkowski_sum);
 
+    }
 
   if (finishline != null){
     let d = color(0,255,0);
     fill(d);
-    ellipse(finishline.x,finishline.y,25,25);
+    rect(finishline.x-20,finishline.y-20,40,40);
   }
     // move grabbed objects
   move_grab();
 
-  // Moving Robot Stepsw-
+  // Moving Robot Steps
   if (draw_mode == moving_robot_mode){
     if (steps != 0){
       let i;
-      for (i = 0; i < steps.length; i++){
-        let d2 = color(0,0,i*255/4444)
-        fill(d2)
-        ellipse(steps[i].x,steps[i].y,18,9)
+      for (i = 0; i < max_step; i++){
+        if (i%300 == 0 && i < max_step*0.9){
+          let d2 = color(0,0,i*255/(max_step+1))
+          fill(d2)
+          ellipse(steps[i].x,steps[i].y,20,20)
+        }
+        else if(i > max_step*0.9 && i < max_step*0.99){
+          let d3 =  color(i*255/(max_step+1),i*255/(max_step+1),i*102/(max_step+1))
+          fill(d3)
+          ellipse(steps[i].x,steps[i].y,25,25)
+          }
+        else if(i > max_step*0.99){
+          let d4 =  color(i*255/(max_step+1),15,15)
+          fill(d4)
+          ellipse(steps[i].x,steps[i].y,25,25)
+        }
+        }
       }
     }
-  }} // TODO  ( GENETIC ALGOR MODE )
-
+}
 // button actions
 
 function _save_(_path_, _mode_='png') {
@@ -880,7 +938,7 @@ function keyPressed() {
       force_finish(draw_mode);
       break;
     case ALT:
-      console.log(robots[0]);
+      console.log(max_step);
       break;
   }}   //TODO
 

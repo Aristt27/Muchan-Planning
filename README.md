@@ -1,3 +1,3 @@
-## Final Project - Computational Geometry: Motion Planning
+## Computational Geometry: Motion Planning
 
 https://bruninlima.github.io/Muchan-Planning/
